@@ -1,0 +1,21 @@
+Different way to get user data:
+  There are 3 methods of getting user data from a view to a controller. See the image below.
+        URL query parameters
+        Forms
+        JSON
+    URL query parameters:
+        URL query parameters are listed as key-value pairs at the end of a URL, preceding a "?" question mark. 
+        E.g. www.example.com/hello?my_key=my_value.
+
+    Form data:
+        request.form.get('<name>') reads the value from a form input control (text input, number input, password input, etc) by the name attribute on the input HTML element.
+
+Note: defaults
+
+    request.args.get, request.form.get both accept an optional second parameter, e.g. request.args.get('foo', 'my default'), set to a default value, in case the result is empty.
+
+JSON
+
+    request.data retrieves JSON as a string. Then we'd take that string and turn it into python constructs by calling json.loads on the request.data string to turn it into lists and dictionaries in Python.
+
+Three methods of getting user data in Flask (URL query parameters, form input, and request.data)
