@@ -10,7 +10,7 @@
       ul {
         list-style: none;
         padding-left: 0;
-        width: 200px;
+        width: 250px;
       }
       li {
         clear: both;
@@ -76,6 +76,7 @@
 
     <script>
       let deleteBtns;
+      // Checkbox for todo list compeleted
       const listCheckboxes = document.querySelectorAll('.list-check-completed');
       for (let i = 0; i < listCheckboxes.length; i++) {
           const checkbox = listCheckboxes[i];
@@ -107,10 +108,7 @@
               }
           }
       }
-
-
-
-
+      // Checkbox for todo items compeleted
       const todoCheckboxes = document.querySelectorAll('.todo-check-completed');
       for (let i = 0; i < todoCheckboxes.length; i++) {
           const checkbox = todoCheckboxes[i];
@@ -136,7 +134,7 @@
               })
           }
       }
-
+      // Delete btn of todo items
       deleteBtns = document.querySelectorAll(".delete-todo");
       
       for (let i = 0; i < deleteBtns.length; i++) {
@@ -158,7 +156,7 @@
             });
         };
       }
-
+//Delete btn for todo list
       deleteListBtns = document.querySelectorAll(".delete-list");
       
       for (let i = 0; i < deleteListBtns.length; i++) {
@@ -183,7 +181,7 @@
         };
       }
 
-      
+      //Create Todo items
       document.getElementById('todo-form').onsubmit = function (e) {
         e.preventDefault();
 
@@ -212,7 +210,7 @@
             document.getElementById('error').className = '';
         })
       }
-
+      //Create Todo list
       document.getElementById('list-form').onsubmit = function (e) {
         e.preventDefault();
         fetch('/lists/create', {
@@ -239,8 +237,6 @@
             document.getElementById('error').className = '';
         })
       }
-
-
     </script>
   </body>
 </html>

@@ -1,5 +1,5 @@
 import sys
-from flask import Flask, abort, render_template, jsonify , request, redirect, url_for
+from flask import Flask, abort, render_template, jsonify , request, redirect, session, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
@@ -28,12 +28,28 @@ class Todo(db.Model):
   def __repr__(self):
     return f'<Todo {self.id} {self.description}>'
   
-
+  #many to many relation
+order_items = db.Table('order_items',
+    db.Column('order_id', db.Integer, db.ForeignKey('order.id'), primary_key=True),
+    db.Column('product_id', db.Integer, db.ForeignKey('product.id'), primary_key=True)
+)
+#parent table
+class Order(db.Model):
+  id = db.Column(db.Integer, primary_key=True)
+  status = db.Column(db.String(), nullable=False)
+  products = db.relationship('Product', secondary=order_items,
+      backref=db.backref('orders', lazy=True))\
+      
+#Child table
+class Product(db.Model):
+  id = db.Column(db.Integer, primary_key=True)
+  name = db.Column(db.String(), nullable=False)
     
 with app.app_context():
    #Creates all tables only once
    db.create_all()
 
+# Create Todo items and put them under the same todo list
 @app.route('/todos/create', methods=['POST'])
 def create_todo():
    error=False
@@ -43,7 +59,7 @@ def create_todo():
        description =  request.get_json()['description']
        list_id= request.get_json()['list_id']
        todo = Todo(description=description)
-       active_list = TodoList.query.get(list_id)
+       active_list =db.session.get(TodoList,list_id) #TodoList.query.get(list_id) => Legacy code
        todo.list = active_list
        db.session.add(todo)
        db.session.commit()
@@ -59,11 +75,12 @@ def create_todo():
         else:            
             return jsonify(body)
         
+# Set completed for Todo items        
 @app.route('/todos/<todo_id>/set-completed',methods=['POST'])
 def set_completed_todo(todo_id):
     try:
         completed = request.get_json()['completed']
-        todo =Todo.session.get(todo_id)
+        todo =db.session.get(Todo , todo_id)
         todo.completed = completed
         db.session.commit()
     except:
@@ -72,6 +89,7 @@ def set_completed_todo(todo_id):
         db.session.close()
     return redirect(url_for('index'))
 
+#Delete todo items by todo id
 @app.route('/todos/<todo_id>', methods=['DELETE'])
 def delete_todo(todo_id):
   try:
@@ -83,6 +101,7 @@ def delete_todo(todo_id):
     db.session.close()
   return jsonify({ 'success': True })
 
+#Create todo list 
 @app.route('/lists/create', methods=['POST'])
 def create_todolist():
    error=False
@@ -105,13 +124,14 @@ def create_todolist():
             abort(400)
         else:            
             return jsonify(body)
-
+        
+#set todo list to completed
 @app.route('/lists/<list_id>/set-completed', methods=['POST'])
 def set_completed_list(list_id):
     error = False
 
     try:
-        list = TodoList.query.get(list_id)
+        list = db.session.get(TodoList,list_id) #TodoList.query.get(list_id)
         for todo in list.todos:
             todo.completed = True
 
@@ -127,12 +147,12 @@ def set_completed_list(list_id):
         abort(500)
     else:
         return '', 200
-
+#
 @app.route('/lists/<list_id>/delete', methods=['DELETE'])
 def delete_list(list_id):
     error = False
     try:
-        list = TodoList.query.get(list_id)
+        list =  db.session.get(TodoList,list_id)#TodoList.query.get(list_id)
         for todo in list.todos:
             db.session.delete(todo)
         
@@ -150,8 +170,8 @@ def delete_list(list_id):
 
 @app.route('/lists/<list_id>')
 def get_list_todos(list_id):
-    lists = TodoList.query.all()
-    active_list = TodoList.query.get(list_id)
+    lists =  db.session.query(TodoList).all() #TodoList.query.all()
+    active_list =  db.session.get(TodoList,list_id)#TodoList.query.get(list_id)
     todos = Todo.query.filter_by(list_id=list_id).order_by('id').all()
 
     return render_template('index.html', todos=todos, lists=lists, active_list=active_list)
